@@ -27,10 +27,17 @@ public class CommonResponseAdvice implements ResponseBodyAdvice<Object> {
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request, ServerHttpResponse response) {
-        // String 类型需要特殊处理，否则会报 ClassCastException
+
+        // 1. 如果返回值是 String 类型，必须手动转 JSON，否则会类型转换异常
         if (body instanceof String) {
-            return objectMapper.convertValue(R.ok(body), String.class);
+            try {
+                return objectMapper.writeValueAsString(R.ok(body));
+            } catch (Exception e) {
+                return R.ok(body);
+            }
         }
+
+        // 2. 其他类型直接包装
         return R.ok(body);
     }
 }

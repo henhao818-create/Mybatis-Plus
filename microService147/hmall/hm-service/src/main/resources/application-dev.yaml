@@ -1,4 +1,4 @@
 hm:
   db:
     host: 192.168.12.6
-    pw: root
+    pw: 123
