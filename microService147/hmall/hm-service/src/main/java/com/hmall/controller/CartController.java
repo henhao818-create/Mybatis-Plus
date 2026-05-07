@@ -9,6 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -35,7 +36,7 @@ public class CartController {
 
     @ApiOperation("删除购物车中商品")
     @DeleteMapping("{id}")
-    public void deleteCartItem(@PathVariable("id") Long id){
+    public void deleteCartItem(@Param ("购物车条目id")@PathVariable("id") Long id){
         cartService.removeById(id);
     }
 

@@ -11,7 +11,6 @@ import com.hmall.common.utils.UserContext;
 import com.hmall.domain.dto.CartFormDTO;
 import com.hmall.domain.dto.ItemDTO;
 import com.hmall.domain.po.Cart;
-import com.hmall.domain.po.Item;
 import com.hmall.domain.vo.CartVO;
 import com.hmall.mapper.CartMapper;
 import com.hmall.service.ICartService;
@@ -19,7 +18,6 @@ import com.hmall.service.IItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +25,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * <p>
+ * 订单详情表 服务实现类
+ * </p>
+ *
+ * @author itheima
+ * @since 2023-05-05
+ */
 @Service
 @RequiredArgsConstructor
 public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements ICartService {
@@ -35,68 +41,65 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
 
     @Override
     public void addItem2Cart(CartFormDTO cartFormDTO) {
-        //TODO 如果商品已经添加过则购买数量添加即可；如果未添加过则新增一条购物车记录。一个用户最多放置购物车商品为10
-
+        // 1.获取登录用户
         Long userId = UserContext.getUser();
-        //商品检查是否已经存在购物车中如果在则数量加一
-        if (checkItemExists(cartFormDTO.getItemId(),userId)){
-            //update cart set num = num + 1 where item_id = ? and user_id = ?
-            lambdaUpdate()
-                    .setSql("num = num + 1")
-                    .eq(Cart::getItemId, cartFormDTO.getItemId())
-                    .eq(Cart::getUserId, userId)
-                    .update();
-        }else {
-            //如果商品不存在则新增一条购物车记录
-            Cart cart = BeanUtils.copyBean(cartFormDTO, Cart.class);
-            cart.setUserId(userId);
-            cart.setNum(1);
-            cart.setCreateTime(LocalDateTime.now());
-            cart.setUpdateTime(LocalDateTime.now());
-            save(cart);
 
+        // 2.判断是否已经存在
+        if(checkItemExists(cartFormDTO.getItemId(), userId)){
+            // 2.1.存在，则更新数量
+            baseMapper.updateNum(cartFormDTO.getItemId(), userId);
+            return;
         }
-    }
+        // 2.2.不存在，判断是否超过购物车数量
+        checkCartsFull(userId);
 
-    //根据商品id用户id查询是否有购物车记录
-    private boolean checkItemExists(Long itemId, Long userId) {
-        //select  count(*) from cart where item_id = ? and user_id = ?
-        Long count = lambdaQuery().eq(Cart::getItemId, itemId)
-                .eq(Cart::getUserId, userId)
-                .count();
-        return count > 0;
+        // 3.新增购物车条目
+        // 3.1.转换PO
+        Cart cart = BeanUtils.copyBean(cartFormDTO, Cart.class);
+        // 3.2.保存当前用户
+        cart.setUserId(userId);
+        // 3.3.保存到数据库
+        save(cart);
     }
 
     @Override
     public List<CartVO> queryMyCarts() {
-       //TODO 查询当前登录用户的购物车列表；需要将Cart转换为CartVO；且CartVO中需要包含商品的最新价格、状态、库存等信息。
-        //1.查询当前登录用户的购物车列表
-        List<Cart> cartList = lambdaQuery().eq(Cart::getUserId, UserContext.getUser()).list();
-        if (CollUtils.isNotEmpty(cartList)){
-
-            List<CartVO> cartVOList = BeanUtils.copyList(cartList, CartVO.class);
-
-            //2.查询商品最新价格、状态、库存等信息
-//            select * from item where id in (？，？，？)
-//            1.1将上述购物车中所有商品id收集到一个集合中
-            Set<Long> idsSet = cartVOList.stream().map(CartVO::getItemId).collect(Collectors.toSet());
-            //1.2根据商品id查询商品最新价格、状态、库存等信息
-            List<Item> itemList = itemService.lambdaQuery().in(Item::getId, idsSet).list();
-            //1.3将商品列表 list  ---->map<商品id，商品>
-            Map<Long, Item> itemMap = itemList.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
-            //1.4将每个购物车中的商品信息从map中获取并更新
-
-            for (CartVO cartVO : cartVOList) {
-                Item item = itemMap.get(cartVO.getItemId());
-                cartVO.setNewPrice(item.getPrice());
-                cartVO.setStatus(item.getStatus());
-                cartVO.setStock(item.getStock());
-            }
-            //返回
-            return cartVOList;
+        // 1.查询我的购物车列表
+        List<Cart> carts = lambdaQuery().eq(Cart::getUserId, UserContext.getUser()).list();
+        if (CollUtils.isEmpty(carts)) {
+            return CollUtils.emptyList();
         }
-        //返回
-        return CollUtils.emptyList();
+
+        // 2.转换VO
+        List<CartVO> vos = BeanUtils.copyList(carts, CartVO.class);
+
+        // 3.处理VO中的商品信息
+        handleCartItems(vos);
+
+        // 4.返回
+        return vos;
+    }
+
+    private void handleCartItems(List<CartVO> vos) {
+        // 1.获取商品id
+        Set<Long> itemIds = vos.stream().map(CartVO::getItemId).collect(Collectors.toSet());
+        // 2.查询商品
+        List<ItemDTO> items = itemService.queryItemByIds(itemIds);
+        if (CollUtils.isEmpty(items)) {
+            return;
+        }
+        // 3.转为 id 到 item的map
+        Map<Long, ItemDTO> itemMap = items.stream().collect(Collectors.toMap(ItemDTO::getId, Function.identity()));
+        // 4.写入vo
+        for (CartVO v : vos) {
+            ItemDTO item = itemMap.get(v.getItemId());
+            if (item == null) {
+                continue;
+            }
+            v.setNewPrice(item.getPrice());
+            v.setStatus(item.getStatus());
+            v.setStock(item.getStock());
+        }
     }
 
     @Override
@@ -108,5 +111,20 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
                 .in(Cart::getItemId, itemIds);
         // 2.删除
         remove(queryWrapper);
+    }
+
+    private void checkCartsFull(Long userId) {
+        int count = lambdaQuery().eq(Cart::getUserId, userId).count();
+        if (count >= 10) {
+            throw new BizIllegalException(StrUtil.format("用户购物车课程不能超过{}", 10));
+        }
+    }
+
+    private boolean checkItemExists(Long itemId, Long userId) {
+        int count = lambdaQuery()
+                .eq(Cart::getUserId, userId)
+                .eq(Cart::getItemId, itemId)
+                .count();
+        return count > 0;
     }
 }

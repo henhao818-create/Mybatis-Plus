@@ -23,6 +23,8 @@ import org.springframework.util.Assert;
  * <p>
  * 用户表 服务实现类
  * </p>
+ *
+ * @author itheima
  */
 @Slf4j
 @Service
@@ -37,30 +39,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public UserLoginVO login(LoginFormDTO loginDTO) {
-        //TODO 校验用户名和密码; 用户名、密码不对登录失败；状态为冻结不能登录；验证成功后生成token
-        //校验用户名是否存在
-        User user = lambdaQuery().eq(User::getUsername, loginDTO.getUsername()).one();
-        if (user == null){
-            throw new ForbiddenException("用户不存在");
+        // 1.数据校验
+        String username = loginDTO.getUsername();
+        String password = loginDTO.getPassword();
+        // 2.根据用户名或手机号查询
+        User user = lambdaQuery().eq(User::getUsername, username).one();
+        Assert.notNull(user, "用户名错误");
+        // 3.校验是否禁用
+        if (user.getStatus() == UserStatus.FROZEN) {
+            throw new ForbiddenException("用户被冻结");
         }
-//        用户的状态是否被冻结，冻结的不能登录
-        if (user.getStatus()==UserStatus.FROZEN){
-            throw new ForbiddenException("用户状态异常");
+        // 4.校验密码
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BadRequestException("用户名或密码错误");
         }
-//        校验用户的密码是否正确
-        if (passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())){
-            throw new BadRequestException("用户密码错误");
-        }
-//        都正确的清况下；根据用户id生成 token令牌
+        // 5.生成TOKEN
         String token = jwtTool.createToken(user.getId(), jwtProperties.getTokenTTL());
-        // 返回userLoginVo并设置其对应的信息
-        UserLoginVO userLoginVO = new UserLoginVO();
-        userLoginVO.setUsername(user.getUsername());
-        userLoginVO.setUserId(user.getId());
-        userLoginVO.setBalance(user.getBalance());
-        userLoginVO.setToken(token);
-
-        return userLoginVO;
+        // 6.封装VO返回
+        UserLoginVO vo = new UserLoginVO();
+        vo.setUserId(user.getId());
+        vo.setUsername(user.getUsername());
+        vo.setBalance(user.getBalance());
+        vo.setToken(token);
+        return vo;
     }
 
     @Override

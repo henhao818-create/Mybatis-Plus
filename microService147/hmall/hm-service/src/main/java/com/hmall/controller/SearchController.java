@@ -1,5 +1,6 @@
 package com.hmall.controller;
 
+
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -29,6 +30,7 @@ public class SearchController {
         // 1. 构建查询条件
         LambdaQueryWrapper<Item> wrapper = new LambdaQueryWrapper<Item>()
                 .like(StrUtil.isNotBlank(query.getKey()), Item::getName, query.getKey())
+                .eq(StrUtil.isNotBlank(query.getBrand()), Item::getBrand, query.getBrand())
                 .eq(StrUtil.isNotBlank(query.getCategory()), Item::getCategory, query.getCategory())
                 .eq(StrUtil.isNotBlank(query.getBrand()), Item::getBrand, query.getBrand())
                 .ge(query.getMinPrice() != null, Item::getPrice, query.getMinPrice())

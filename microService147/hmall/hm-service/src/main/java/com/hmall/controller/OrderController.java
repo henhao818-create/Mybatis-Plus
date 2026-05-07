@@ -8,9 +8,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
 
 @Api(tags = "订单管理接口")
 @RestController
@@ -21,13 +20,13 @@ public class OrderController {
 
     @ApiOperation("根据id查询订单")
     @GetMapping("{id}")
-    public OrderVO queryOrderById(@PathVariable("id") Long orderId) {
+    public OrderVO queryOrderById(@Param ("订单id")@PathVariable("id") Long orderId) {
         return BeanUtils.copyBean(orderService.getById(orderId), OrderVO.class);
     }
 
     @ApiOperation("创建订单")
     @PostMapping
-    public Long createOrder(@Valid @RequestBody OrderFormDTO orderFormDTO){
+    public Long createOrder(@RequestBody OrderFormDTO orderFormDTO){
         return orderService.createOrder(orderFormDTO);
     }
 

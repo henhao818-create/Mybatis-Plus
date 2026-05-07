@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
-@RequestMapping("/hi")
+@RequestMapping("hi")
 public class HelloController {
 
     private final Map<String, AtomicInteger> countMap = new HashMap<>();

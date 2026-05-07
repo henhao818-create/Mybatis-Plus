@@ -11,11 +11,9 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-
 @Api(tags = "支付相关接口")
 @RestController
-@RequestMapping("/pay-orders")
+@RequestMapping("pay-orders")
 @RequiredArgsConstructor
 public class PayController {
 
@@ -23,7 +21,7 @@ public class PayController {
 
     @ApiOperation("生成支付单")
     @PostMapping
-    public String applyPayOrder(@Valid @RequestBody PayApplyDTO applyDTO){
+    public String applyPayOrder(@RequestBody PayApplyDTO applyDTO){
         if(!PayType.BALANCE.equalsValue(applyDTO.getPayType())){
             // 目前只支持余额支付
             throw new BizIllegalException("抱歉，目前只支持余额支付");
@@ -34,7 +32,7 @@ public class PayController {
     @ApiOperation("尝试基于用户余额支付")
     @ApiImplicitParam(value = "支付单id", name = "id")
     @PostMapping("{id}")
-    public void tryPayOrderByBalance(@PathVariable("id") Long id, @Valid @RequestBody PayOrderFormDTO payOrderFormDTO){
+    public void tryPayOrderByBalance(@PathVariable("id") Long id, @RequestBody PayOrderFormDTO payOrderFormDTO){
         payOrderFormDTO.setId(id);
         payOrderService.tryPayOrderByBalance(payOrderFormDTO);
     }
