@@ -2,3 +2,8 @@ hm:
   db:
     host: 192.168.12.6
     pw: 123
+  jwt:
+    location: classpath:hmall.jks
+    password: hmall123456
+    alias: hmall
+    token-ttl: 30m

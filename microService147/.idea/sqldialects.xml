@@ -3,5 +3,8 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/../../../【黑马】Java+AI新版V16零基础就业班/资料/05阶段：微服务框架/01-MybatisPlus/资料/mp.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/../../../【黑马】Java+AI新版V16零基础就业班/资料/05阶段：微服务框架/01-MybatisPlus/资料/黑马商城/mysql/hmall.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/../../../【黑马】Java+AI新版V16零基础就业班/资料/05阶段：微服务框架/03-SpringCloud-基础/资料/hm-cart.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/../../../【黑马】Java+AI新版V16零基础就业班/资料/05阶段：微服务框架/03-SpringCloud-基础/资料/hm-item.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/../../../【黑马】Java+AI新版V16零基础就业班/资料/05阶段：微服务框架/03-SpringCloud-基础/资料/nacos.sql" dialect="MySQL" />
   </component>
 </project>
