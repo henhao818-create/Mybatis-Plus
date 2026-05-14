@@ -4,6 +4,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmall.cart.client.ItemClient;
 import com.hmall.common.exception.BizIllegalException;
 import com.hmall.common.utils.BeanUtils;
 import com.hmall.common.utils.CollUtils;
@@ -45,6 +46,8 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
     private final RestTemplate restTemplate;
 //    private final IItemService itemService;
     private final DiscoveryClient discoveryClient;
+
+    private final ItemClient itemClient;
 
     private final static Integer MAX_CART_SIZE = 20;
 
@@ -94,8 +97,8 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
         Set<Long> itemIds = vos.stream().map(CartVO::getItemId).collect(Collectors.toSet());
         //发送请求 地址类似：http://localhost:8081/item/queryItemByIds
         // 2.查询商品
-        //List<ItemDTO> items = itemService.queryItemByIds(itemIds);
-        List<ItemDTO> items=null;
+
+/*        List<ItemDTO> items=null;
 
 // 获取注册中心中item-service的服务列表
         List<ServiceInstance> instanceList = discoveryClient.getInstances("item-service");
@@ -121,7 +124,9 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
 
         if ((response.getStatusCode().is2xxSuccessful())){
             items = response.getBody();
-        }
+        }*/
+
+        List<ItemDTO> items = itemClient.queryItemByIds(itemIds);
 
         if (CollUtils.isEmpty(items)) {
             return;
