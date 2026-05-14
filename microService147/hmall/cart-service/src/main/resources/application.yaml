@@ -45,3 +45,6 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.hmall.cart.controller
+feign:
+  okhttp:
+    enable: true #开启okhttp的feign的底层请求调用客户端为okhttp
