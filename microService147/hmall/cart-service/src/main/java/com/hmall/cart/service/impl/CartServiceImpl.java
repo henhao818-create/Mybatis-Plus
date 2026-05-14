@@ -1,5 +1,6 @@
 package com.hmall.cart.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -14,6 +15,8 @@ import com.hmall.cart.domain.vo.CartVO;
 import com.hmall.cart.mapper.CartMapper;
 import com.hmall.cart.service.ICartService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -39,8 +42,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements ICartService {
 
-//    private final IItemService itemService;
     private final RestTemplate restTemplate;
+//    private final IItemService itemService;
+    private final DiscoveryClient discoveryClient;
+
+    private final static Integer MAX_CART_SIZE = 20;
 
     @Override
     public void addItem2Cart(CartFormDTO cartFormDTO) {
@@ -90,7 +96,22 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
         // 2.查询商品
         //List<ItemDTO> items = itemService.queryItemByIds(itemIds);
         List<ItemDTO> items=null;
-        String url = "http://localhost:8081/items?ids={ids}";
+
+// 获取注册中心中item-service的服务列表
+        List<ServiceInstance> instanceList = discoveryClient.getInstances("item-service");
+
+// 安全判断：没有实例就直接抛错，避免随机数异常
+        if (CollUtils.isEmpty(instanceList)) {
+            throw new BizIllegalException("商品服务不可用！");
+        }
+
+// 从服务列表中随机选择一个实例（安全版）
+        int randomIndex = RandomUtil.randomInt(instanceList.size());
+        ServiceInstance serviceInstance = instanceList.get(randomIndex);
+        //可以从实例中获得商品微服务的访问地址
+
+        String url = serviceInstance.getUri()+"/items?ids={ids}";
+
         ResponseEntity<List<ItemDTO>> response = restTemplate.exchange(url, HttpMethod.GET,// 请求方式
                 null,// 请求参数实体，应为在路径中携带参数，所以不需要
                 new ParameterizedTypeReference<List<ItemDTO>>() {
