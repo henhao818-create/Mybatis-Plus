@@ -13,7 +13,9 @@ import java.util.List;
 
 @FeignClient(value = "user-service",configuration = DefaultFeignConfig.class)
 public interface UserClient {
-    @PutMapping("/money/deduct")
-    public void deductMoney(@RequestParam("pw") String pw,@RequestParam("amount") Integer amount);
+
+    @PutMapping("/users/money/deduct")
+     void deductMoney(@RequestParam("pw") String pw,
+                      @RequestParam("amount") Integer amount);
 
 }

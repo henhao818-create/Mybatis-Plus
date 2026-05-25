@@ -35,4 +35,3 @@ public class UserController {
         userService.deductMoney(pw, amount);
     }
 }
-
