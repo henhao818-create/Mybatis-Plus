@@ -12,10 +12,13 @@ spring:
           uri: lb://cart-service
           predicates:
             - Path=/carts/**
+            - Method=GET,Post
         - id: item
           uri: lb://item-service
           predicates:
-            - Path=/items/**,/search/**
+            - Path=/api/items/**,/search/**
+          filters: StripPrefix=1 #路由到后端微服务的时候要移除前缀 ：1 表示移除1哥：2表示移除2；个
+
         - id: user
           uri: lb://user-service
           predicates:
