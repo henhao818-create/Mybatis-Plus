@@ -15,12 +15,16 @@ spring:
             - Method=GET,POST
         - id: item
           uri: lb://item-service
-
-
           predicates:
-            - Path=/api/items/**,/search/**
+            - Path=/items/**,/search/**
           filters:
-            -AddRequestHeader=testStr,hello itheima    #路由到后端微服务的时候要移除前缀 ：1 表示移除1哥：2表示移除2；个
+            - AddRequestHeader=testStr,hello itheima
+
+
+#          predicates:
+#            - Path=/api/items/**,/search/**
+#          filters:
+#            -StripePrefix=1    #路由到后端微服务的时候要移除前缀 ：1 表示移除1哥：2表示移除2；个
 
 
 
